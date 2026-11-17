@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>popclub.</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel para compilar JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#C8FBEA]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const {
+      Heart, MessageCircle, Share2, Plus, Sparkles, Music, Film, BookOpen,
+      Star, Grid, Compass, User, X, Camera, Search, Bookmark, CheckCircle2,
+      Calendar, ChevronRight, SlidersHorizontal, MessageSquare, Send,
+      UserPlus, UserCheck, ArrowLeft, Paperclip, TrendingUp, Award, Layers, Loader2
+    } = LucideReact;
+
+    // 🔑 PEGA AQUÍ TU API KEY GRATUITA DE TMDB (The Movie Database)
+    const TMDB_API_KEY = '';
+
+    const INITIAL_MEMORIES = [
+      {
+        id: 'm1',
+        user: { name: 'sofia.v', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+        photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
+        caption: 'Atardecer de domingo perfecto ✨',
+        date: 'Hace 2h',
+        likes: 42,
+        music: { title: 'Melodrama', artist: 'Lorde', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80', type: 'Álbum', rating: 5 },
+        media: { title: 'Before Sunrise', type: 'Película', cover: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80', rating: 4.5 }
+      },
+      {
+        id: 'm2',
+        user: { name: 'sofia.v', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+        photo: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80',
+        caption: 'Escape de fin de semana a la costa 🌊',
+        date: 'Ayer',
+        likes: 128,
+        music: { title: 'Ocean Eyes', artist: 'Billie Eilish', cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80', type: 'Canción', rating: 5 },
+        media: { title: 'Normal People', type: 'Libro', cover: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&auto=format&fit=crop&q=80', rating: 4.8 }
+      },
+      {
+        id: 'm3',
+        user: { name: 'sofia.v', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+        photo: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
+        caption: 'Noche de conciertos y buenas luces 🎤',
+        date: '3 días',
+        likes: 95,
+        music: { title: 'Future Nostalgia', artist: 'Dua Lipa', cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80', type: 'Álbum', rating: 4.5 },
+        media: { title: 'La La Land', type: 'Película', cover: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80', rating: 5 }
+      }
+    ];
+
+    const FAVORITE_MEDIA = {
+      movies: [
+        { title: 'Challengers', director: 'Luca Guadagnino', rating: 5, year: '2024', cover: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80' },
+        { title: 'Before Sunrise', director: 'Richard Linklater', rating: 5, year: '1995', cover: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80' },
+        { title: 'Clueless', director: 'Amy Heckerling', rating: 4.8, year: '1995', cover: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&auto=format&fit=crop&q=80' }
+      ],
+      music: [
+        { title: 'Melodrama', artist: 'Lorde', rating: 5, year: '2017', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80' },
+        { title: 'HIT ME HARD AND SOFT', artist: 'Billie Eilish', rating: 5, year: '2024', cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80' },
+        { title: 'Future Nostalgia', artist: 'Dua Lipa', rating: 4.9, year: '2020', cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80' }
+      ],
+      books: [
+        { title: 'Tomorrow, and Tomorrow', author: 'Gabrielle Zevin', rating: 5, year: '2022', cover: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&auto=format&fit=crop&q=80' },
+        { title: 'Normal People', author: 'Sally Rooney', rating: 4.8, year: '2018', cover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&auto=format&fit=crop&q=80' }
+      ]
+    };
+
+    const FEED_REVIEWS = [
+      {
+        id: 'r1',
+        user: { name: 'mateo_c', handle: '@mateoc', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80' },
+        category: 'Música',
+        categoryIcon: Music,
+        title: 'HIT ME HARD AND SOFT',
+        creator: 'Billie Eilish',
+        cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80',
+        rating: 5,
+        review: 'Increíble evolución de sonido. La producción en los bajos es impecable.',
+        likes: 34,
+        comments: 8,
+        time: 'Hace 45m'
+      },
+      {
+        id: 'r2',
+        user: { name: 'valeria.design', handle: '@valeria', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80' },
+        category: 'Cine',
+        categoryIcon: Film,
+        title: 'Challengers',
+        creator: 'Luca Guadagnino',
+        cover: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80',
+        rating: 4.5,
+        review: 'Visualmente una obra de arte moderna con la banda sonora perfecta.',
+        likes: 89,
+        comments: 12,
+        time: 'Hace 3h'
+      }
+    ];
+
+    const MOCK_USERS = [
+      { id: 'u1', name: 'Valeria Design', handle: '@valeria', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', bio: 'Cineasta amateur & fan de Lana del Rey ✨', followers: '2.4k', isFollowing: true },
+      { id: 'u2', name: 'Mateo C.', handle: '@mateoc', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80', bio: 'Escuchando hyperpop 24/7 y leyendo Murakami', followers: '890', isFollowing: false }
+    ];
+
+    const MOCK_CONVERSATIONS = [
+      {
+        id: 'c1',
+        user: MOCK_USERS[0],
+        lastMessage: '¿Viste Challengers? La música de la escena final es increíble 🔥',
+        time: '10:42 AM',
+        unread: 2,
+        messages: [
+          { id: 'm1', sender: 'them', text: 'Hola Sofi! Vi tu memory de la película de ayer', time: '10:30 AM' },
+          { id: 'm2', sender: 'me', text: 'Siii me encantó la fotografía, le puse 5 estrellas!', time: '10:35 AM' },
+          { id: 'm3', sender: 'them', text: '¿Viste Challengers? La música de la escena final es increíble 🔥', time: '10:42 AM' }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // SERVICIOS DE APIS REALES (MÚSICA, CINE, LIBROS)
+    // ==========================================
+    async function searchMusicAPI(query) {
+      if (!query.trim()) return [];
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=6`);
+      const data = await res.json();
+      return (data.results || []).map(item => ({
+        id: `music_${item.trackId}`,
+        title: item.trackName,
+        creator: item.artistName,
+        cover: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '300x300') : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300',
+        type: 'Música',
+        year: item.releaseDate ? item.releaseDate.slice(0, 4) : ''
+      }));
+    }
+
+    async function searchBooksAPI(query) {
+      if (!query.trim()) return [];
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6`);
+      const data = await res.json();
+      return (data.items || []).map(item => {
+        const info = item.volumeInfo || {};
+        return {
+          id: `book_${item.id}`,
+          title: info.title || 'Sin título',
+          creator: info.authors ? info.authors.join(', ') : 'Autor desconocido',
+          cover: info.imageLinks?.thumbnail?.replace('http:', 'https:') || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300',
+          type: 'Libro',
+          year: info.publishedDate ? info.publishedDate.slice(0, 4) : ''
+        };
+      });
+    }
+
+    async function searchMoviesAPI(query) {
+      if (!query.trim()) return [];
+      if (!TMDB_API_KEY) {
+        // Fallback usando iTunes Movies API si el usuario aún no ha pegado su API Key de TMDB
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=movie&limit=6`);
+        const data = await res.json();
+        return (data.results || []).map(item => ({
+          id: `movie_${item.trackId}`,
+          title: item.trackName,
+          creator: item.artistName || 'Director',
+          cover: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '300x300') : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300',
+          type: 'Película',
+          year: item.releaseDate ? item.releaseDate.slice(0, 4) : ''
+        }));
+      }
+      const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=es-ES`);
+      const data = await res.json();
+      return (data.results || []).slice(0, 6).map(item => ({
+        id: `movie_${item.id}`,
+        title: item.title,
+        creator: 'Película',
+        cover: item.poster_path ? `https://image.tmdb.org/t/p/w300${item.poster_path}` : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300',
+        type: 'Película',
+        year: item.release_date ? item.release_date.slice(0, 4) : ''
+      }));
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('profile');
+      const [profileSubTab, setProfileSubTab] = useState('favorites');
+      const [memories, setMemories] = useState(INITIAL_MEMORIES);
+      const [selectedMemory, setSelectedMemory] = useState(null);
+      const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+      // Estados de Búsqueda Global
+      const [searchQuery, setSearchQuery] = useState('');
+      const [searchCategory, setSearchCategory] = useState('music'); // 'users' | 'music' | 'movies' | 'books'
+      const [apiResults, setApiResults] = useState([]);
+      const [isSearching, setIsSearching] = useState(false);
+
+      const [usersList, setUsersList] = useState(MOCK_USERS);
+      const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
+      const [activeChatId, setActiveChatId] = useState(null);
+      const [messageInput, setMessageInput] = useState('');
+
+      // Estados para Crear Memory con búsqueda integrada
+      const [newPhotoUrl, setNewPhotoUrl] = useState('');
+      const [newCaption, setNewCaption] = useState('');
+      const [songSearchTerm, setSongSearchTerm] = useState('');
+      const [songSuggestions, setSongSuggestions] = useState([]);
+      const [selectedSong, setSelectedSong] = useState(null);
+
+      const [mediaSearchTerm, setMediaSearchTerm] = useState('');
+      const [mediaSuggestions, setMediaSuggestions] = useState([]);
+      const [selectedMedia, setSelectedMedia] = useState(null);
+      const [newMediaType, setNewMediaType] = useState('Película');
+
+      // Efecto para Búsqueda en la pestaña "Buscar"
+      useEffect(() => {
+        if (searchCategory === 'users') {
+          setApiResults([]);
+          return;
+        }
+        if (!searchQuery.trim()) {
+          setApiResults([]);
+          return;
+        }
+        const timer = setTimeout(async () => {
+          setIsSearching(true);
+          try {
+            if (searchCategory === 'music') setApiResults(await searchMusicAPI(searchQuery));
+            if (searchCategory === 'movies') setApiResults(await searchMoviesAPI(searchQuery));
+            if (searchCategory === 'books') setApiResults(await searchBooksAPI(searchQuery));
+          } catch (err) {
+            console.error(err);
+          } finally {
+            setIsSearching(false);
+          }
+        }, 400);
+        return () => clearTimeout(timer);
+      }, [searchQuery, searchCategory]);
+
+      // Autocompletado de Canción dentro del Modal Crear Memory
+      useEffect(() => {
+        if (!songSearchTerm.trim() || selectedSong?.title === songSearchTerm) {
+          setSongSuggestions([]);
+          return;
+        }
+        const timer = setTimeout(async () => {
+          const results = await searchMusicAPI(songSearchTerm);
+          setSongSuggestions(results.slice(0, 3));
+        }, 400);
+        return () => clearTimeout(timer);
+      }, [songSearchTerm]);
+
+      // Autocompletado de Película/Libro dentro del Modal Crear Memory
+      useEffect(() => {
+        if (!mediaSearchTerm.trim() || selectedMedia?.title === mediaSearchTerm) {
+          setMediaSuggestions([]);
+          return;
+        }
+        const timer = setTimeout(async () => {
+          const results = newMediaType === 'Película'
+            ? await searchMoviesAPI(mediaSearchTerm)
+            : await searchBooksAPI(mediaSearchTerm);
+          setMediaSuggestions(results.slice(0, 3));
+        }, 400);
+        return () => clearTimeout(timer);
+      }, [mediaSearchTerm, newMediaType]);
+
+      const toggleFollowUser = (userId) => {
+        setUsersList(usersList.map(u => u.id === userId ? { ...u, isFollowing: !u.isFollowing } : u));
+      };
+
+      const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!messageInput.trim() || !activeChatId) return;
+        setConversations(conversations.map(chat => {
+          if (chat.id === activeChatId) {
+            return {
+              ...chat,
+              lastMessage: messageInput,
+              time: 'Ahora',
+              messages: [...chat.messages, { id: `msg_${Date.now()}`, sender: 'me', text: messageInput, time: 'Ahora' }]
+            };
+          }
+          return chat;
+        }));
+        setMessageInput('');
+      };
+
+      const activeChat = conversations.find(c => c.id === activeChatId);
+
+      const handleCreateMemory = (e) => {
+        e.preventDefault();
+        if (!newPhotoUrl || (!selectedSong && !songSearchTerm) || (!selectedMedia && !mediaSearchTerm)) return;
+
+        const newMemory = {
+          id: `m_${Date.now()}`,
+          user: { name: 'sofia.v', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+          photo: newPhotoUrl,
+          caption: newCaption || 'Momento especial ✨',
+          date: 'Justo ahora',
+          likes: 1,
+          music: {
+            title: selectedSong ? selectedSong.title : songSearchTerm,
+            artist: selectedSong ? selectedSong.creator : 'Artista Pop',
+            cover: selectedSong ? selectedSong.cover : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300',
+            type: 'Canción',
+            rating: 5
+          },
+          media: {
+            title: selectedMedia ? selectedMedia.title : mediaSearchTerm,
+            type: newMediaType,
+            cover: selectedMedia ? selectedMedia.cover : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300',
+            rating: 5
+          }
+        };
+
+        setMemories([newMemory, ...memories]);
+        setIsCreateModalOpen(false);
+        setNewPhotoUrl('');
+        setNewCaption('');
+        setSongSearchTerm('');
+        setSelectedSong(null);
+        setMediaSearchTerm('');
+        setSelectedMedia(null);
+      };
+
+      const openCreateWithItem = (item) => {
+        if (item.type === 'Música') {
+          setSelectedSong(item);
+          setSongSearchTerm(item.title);
+        } else {
+          setNewMediaType(item.type);
+          setSelectedMedia(item);
+          setMediaSearchTerm(item.title);
+        }
+        setIsCreateModalOpen(true);
+      };
+
+      return (
+        <div className="min-h-screen bg-[#C8FBEA] font-sans text-slate-800 flex flex-col items-center">
+          <div className="w-full max-w-md bg-[#C8FBEA] min-h-screen flex flex-col shadow-2xl relative border-x border-white/20 pb-20">
+
+            {/* HEADER */}
+            <header className="sticky top-0 z-30 bg-[#C8FBEA]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-white/30">
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('feed')}>
+                <h1 className="text-2xl font-black tracking-tight text-[#C746B3]">popclub<span className="text-[#C746B3]">.</span></h1>
+                <span className="text-[10px] bg-white/80 text-[#C746B3] font-bold px-2 py-0.5 rounded-full border border-[#C746B3]/20">y2k</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button onClick={() => setIsCreateModalOpen(true)} className="bg-[#C746B3] hover:bg-[#b03a9e] text-white p-2 rounded-full flex items-center gap-1 px-3 text-xs font-bold shadow-sm">
+                  <Plus size={15} strokeWidth={2.5} /> <span>Log</span>
+                </button>
+                <div onClick={() => setActiveTab('profile')} className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm cursor-pointer">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Sofia" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </header>
+
+            {/* MAIN */}
+            <main className="flex-1 px-4 pt-4">
+              {activeTab === 'feed' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 className="text-xs font-bold tracking-wider text-slate-600 uppercase">Actividad reciente</h2>
+                  </div>
+                  {FEED_REVIEWS.map((item) => {
+                    const IconComponent = item.categoryIcon;
+                    return (
+                      <div key={item.id} className="bg-white rounded-[26px] p-4 shadow-sm border border-white/80 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <img src={item.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            <div>
+                              <p className="text-xs font-bold text-slate-900">{item.user.name}</p>
+                              <p className="text-[10px] text-slate-400">{item.time}</p>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#C8FBEA]/60 text-[#C746B3]">
+                            <IconComponent size={12} /> {item.category}
+                          </span>
+                        </div>
+                        <div className="flex gap-3 bg-slate-50 p-2.5 rounded-[20px]">
+                          <img src={item.cover} alt="" className="w-14 h-14 rounded-xl object-cover" />
+                          <div className="flex-1 flex flex-col justify-center">
+                            <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{item.title}</h4>
+                            <p className="text-xs text-slate-500">{item.creator}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= item.rating ? 'fill-[#C746B3] text-[#C746B3]' : 'text-slate-200'} />)}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-600 px-1">{item.review}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeTab === 'search' && (
+                <div className="space-y-4">
+                  {/* BARRA DE BÚSQUEDA */}
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder={
+                        searchCategory === 'music' ? 'Buscar canciones o artistas (ej. Rosalía, Lorde)...' :
+                        searchCategory === 'movies' ? 'Buscar películas (ej. Challengers, Dune)...' :
+                        searchCategory === 'books' ? 'Buscar libros o autores (ej. Sally Rooney)...' :
+                        'Buscar usuarios...'
+                      }
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-white/80 text-xs font-medium focus:outline-none focus:border-[#C746B3]"
+                    />
+                  </div>
+
+                  {/* SELECTOR DE CATEGORÍA */}
+                  <div className="flex gap-1.5 bg-white/70 p-1 rounded-2xl border">
+                    {[
+                      { id: 'music', label: 'Música', icon: Music },
+                      { id: 'movies', label: 'Cine', icon: Film },
+                      { id: 'books', label: 'Libros', icon: BookOpen },
+                      { id: 'users', label: 'Gente', icon: User }
+                    ].map(tab => {
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setSearchCategory(tab.id)}
+                          className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                            searchCategory === tab.id ? 'bg-[#C746B3] text-white shadow-xs' : 'text-slate-600'
+                          }`}
+                        >
+                          <Icon size={12} /> {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* RESULTADOS DE APIS MULTIMEDIA */}
+                  {searchCategory !== 'users' && (
+                    <div className="space-y-2.5">
+                      {isSearching && (
+                        <div className="text-center py-8 text-xs font-bold text-[#C746B3]">
+                          Buscando en catálogo...
+                        </div>
+                      )}
+
+                      {!isSearching && searchQuery && apiResults.length === 0 && (
+                        <div className="bg-white/80 rounded-2xl p-6 text-center text-xs text-slate-500">
+                          No se encontraron resultados para "{searchQuery}"
+                        </div>
+                      )}
+
+                      {!isSearching && !searchQuery && (
+                        <div className="bg-white/60 rounded-2xl p-6 text-center text-xs text-slate-500">
+                          Escribe arriba para buscar {searchCategory === 'music' ? 'canciones' : searchCategory === 'movies' ? 'películas' : 'libros'} en tiempo real ✨
+                        </div>
+                      )}
+
+                      {apiResults.map(item => (
+                        <div key={item.id} className="bg-white rounded-2xl p-3 shadow-xs border border-white/80 flex items-center justify-between gap-3">
+                          <div className="flex items-center space-x-3 overflow-hidden">
+                            <img src={item.cover} alt={item.title} className="w-12 h-12 rounded-xl object-cover shrink-0 bg-slate-100" />
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">{item.title}</h4>
+                              <p className="text-[11px] text-slate-500 truncate">{item.creator} {item.year ? `• ${item.year}` : ''}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => openCreateWithItem(item)}
+                            className="shrink-0 bg-[#C8FBEA] hover:bg-[#b2f5de] text-[#C746B3] px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1"
+                          >
+                            <Plus size={12} /> Log
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* LISTA DE USUARIOS */}
+                  {searchCategory === 'users' && (
+                    <div className="space-y-2">
+                      {usersList.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase())).map((user) => (
+                        <div key={user.id} className="bg-white rounded-2xl p-3 shadow-xs border border-white/80 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <img src={user.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-900">{user.name} <span className="text-[10px] text-slate-400 font-normal">{user.handle}</span></h4>
+                              <p className="text-[11px] text-slate-500">{user.bio}</p>
+                            </div>
+                          </div>
+                          <button onClick={() => toggleFollowUser(user.id)} className={`px-3 py-1.5 rounded-full text-xs font-bold ${user.isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#C746B3] text-white'}`}>
+                            {user.isFollowing ? 'Siguiendo' : 'Seguir'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'memories' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5"><Sparkles size={16} className="text-[#C746B3]" /> Visual Memories</h2>
+                    <button onClick={() => setIsCreateModalOpen(true)} className="bg-[#C746B3] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"><Plus size={14} /> Nuevo</button>
+                  </div>
+                  <div className="space-y-4">
+                    {memories.map((mem) => (
+                      <div key={mem.id} onClick={() => setSelectedMemory(mem)} className="bg-white rounded-[28px] overflow-hidden p-3 shadow-sm border border-white/80 space-y-3 cursor-pointer">
+                        <div className="flex items-center space-x-2 px-1">
+                          <img src={mem.user.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+                          <span className="text-xs font-bold text-slate-900">{mem.user.name}</span>
+                        </div>
+                        <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100">
+                          <img src={mem.photo} alt="" className="w-full h-full object-cover" />
+                          <div className="absolute bottom-3 left-3 right-3 bg-white/85 backdrop-blur-md p-2 rounded-xl flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-900 truncate"><Music size={13} className="inline mr-1 text-[#C746B3]" />{mem.music.title} — {mem.music.artist}</span>
+                            <span className="text-[10px] font-bold text-[#C746B3] bg-[#C8FBEA] px-2 py-0.5 rounded-full shrink-0">★ {mem.music.rating}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-700 px-1 font-medium">{mem.caption}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'chat' && (
+                <div>
+                  {!activeChatId ? (
+                    <div className="space-y-3">
+                      <h2 className="text-xs font-bold tracking-wider text-slate-600 uppercase px-1">Mensajes Directos</h2>
+                      {conversations.map((chat) => (
+                        <div key={chat.id} onClick={() => setActiveChatId(chat.id)} className="bg-white rounded-2xl p-3.5 shadow-xs border border-white/80 flex items-center justify-between cursor-pointer">
+                          <div className="flex items-center space-x-3">
+                            <img src={chat.user.avatar} alt="" className="w-11 h-11 rounded-full object-cover" />
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-900">{chat.user.name}</h4>
+                              <p className="text-xs text-slate-500 line-clamp-1">{chat.lastMessage}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-[28px] border border-white/80 shadow-sm flex flex-col h-[calc(100vh-170px)]">
+                      <div className="p-3 px-4 border-b flex items-center space-x-3">
+                        <button onClick={() => setActiveChatId(null)}><ArrowLeft size={18} /></button>
+                        <img src={activeChat.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        <h4 className="text-xs font-bold text-slate-900">{activeChat.user.name}</h4>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {activeChat.messages.map((msg) => (
+                          <div key={msg.id} className={`flex flex-col ${msg.sender === 'me' ? 'items-end' : 'items-start'}`}>
+                            <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs font-medium ${msg.sender === 'me' ? 'bg-[#C746B3] text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none'}`}>{msg.text}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <form onSubmit={handleSendMessage} className="p-3 border-t flex items-center gap-2">
+                        <input type="text" placeholder="Escribe un mensaje..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} className="flex-1 bg-slate-50 text-xs px-3.5 py-2 rounded-full border focus:outline-none focus:border-[#C746B3]" />
+                        <button type="submit" className="bg-[#C746B3] text-white p-2 rounded-full"><Send size={15} /></button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'profile' && (
+                <div className="space-y-4">
+                  <div className="bg-white/90 rounded-[28px] p-5 border shadow-sm text-center">
+                    <div className="relative w-20 h-20 mx-auto mb-3">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80" alt="" className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md" />
+                    </div>
+                    <h2 className="text-lg font-black text-slate-900">Sofía Valenzuela</h2>
+                    <p className="text-xs font-bold text-[#C746B3]">@sofia.v</p>
+                    <p className="text-xs text-slate-500 mt-2 font-medium">Curando momentos y tracks pop inolvidables 🎀✨</p>
+                  </div>
+
+                  <div className="flex bg-white/70 p-1 rounded-2xl border shadow-2xs">
+                    <button onClick={() => setProfileSubTab('favorites')} className={`flex-1 py-1.5 text-xs font-bold rounded-xl ${profileSubTab === 'favorites' ? 'bg-[#C746B3] text-white' : 'text-slate-600'}`}>Favoritos</button>
+                    <button onClick={() => setProfileSubTab('photos')} className={`flex-1 py-1.5 text-xs font-bold rounded-xl ${profileSubTab === 'photos' ? 'bg-[#C746B3] text-white' : 'text-slate-600'}`}>Galería Fotos</button>
+                  </div>
+
+                  {profileSubTab === 'favorites' && (
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-[24px] p-4 border space-y-3">
+                        <h3 className="text-xs font-black uppercase text-slate-800 flex items-center gap-1.5"><Film size={14} className="text-[#C746B3]" /> Películas & Series Favoritas</h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          {FAVORITE_MEDIA.movies.map((item, idx) => (
+                            <div key={idx} className="space-y-1">
+                              <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-100">
+                                <img src={item.cover} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <h4 className="text-[11px] font-bold text-slate-900 truncate">{item.title}</h4>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileSubTab === 'photos' && (
+                    <div className="grid grid-cols-3 gap-2 pb-6">
+                      {memories.map((mem) => (
+                        <div key={mem.id} onClick={() => setSelectedMemory(mem)} className="aspect-square rounded-2xl overflow-hidden cursor-pointer shadow-2xs bg-white border">
+                          <img src={mem.photo} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </main>
+
+            {/* MODAL MEMORY */}
+            {selectedMemory && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold">{selectedMemory.user.name}</span>
+                    <button onClick={() => setSelectedMemory(null)}><X size={16} /></button>
+                  </div>
+                  <img src={selectedMemory.photo} alt="" className="w-full aspect-square object-cover rounded-2xl" />
+                  <p className="text-xs text-slate-700">{selectedMemory.caption}</p>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="bg-slate-50 p-2 rounded-xl flex items-center gap-2">
+                      <img src={selectedMemory.music.cover} className="w-8 h-8 rounded-lg object-cover" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold truncate">{selectedMemory.music.title}</p>
+                        <p className="text-[9px] text-slate-400 truncate">{selectedMemory.music.artist}</p>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-xl flex items-center gap-2">
+                      <img src={selectedMemory.media.cover} className="w-8 h-8 rounded-lg object-cover" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold truncate">{selectedMemory.media.title}</p>
+                        <p className="text-[9px] text-slate-400 truncate">{selectedMemory.media.type}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL CREAR CON AUTOCOMPLETADO DE APIS */}
+            {isCreateModalOpen && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-md rounded-[32px] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-bold">Crear Nuevo Memory</h3>
+                    <button onClick={() => setIsCreateModalOpen(false)}><X size={16} /></button>
+                  </div>
+                  <form onSubmit={handleCreateMemory} className="space-y-3">
+                    <input
+                      type="url"
+                      placeholder="URL de la Foto (ej. https://...)"
+                      value={newPhotoUrl}
+                      onChange={e => setNewPhotoUrl(e.target.value)}
+                      required
+                      className="w-full p-2.5 text-xs rounded-xl border bg-slate-50"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Pie de foto..."
+                      value={newCaption}
+                      onChange={e => setNewCaption(e.target.value)}
+                      className="w-full p-2.5 text-xs rounded-xl border bg-slate-50"
+                    />
+
+                    {/* BUSCADOR EN VIVO DE CANCIÓN */}
+                    <div className="relative">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Música (Busca en la API)</label>
+                      <input
+                        type="text"
+                        placeholder="Escribe una canción o artista..."
+                        value={songSearchTerm}
+                        onChange={e => { setSongSearchTerm(e.target.value); setSelectedSong(null); }}
+                        required
+                        className="w-full p-2.5 text-xs rounded-xl border bg-slate-50 mt-1"
+                      />
+                      {songSuggestions.length > 0 && (
+                        <div className="mt-1 bg-white border rounded-xl shadow-md divide-y">
+                          {songSuggestions.map(s => (
+                            <div
+                              key={s.id}
+                              onClick={() => { setSelectedSong(s); setSongSearchTerm(s.title); setSongSuggestions([]); }}
+                              className="p-2 flex items-center gap-2 hover:bg-slate-50 cursor-pointer"
+                            >
+                              <img src={s.cover} className="w-8 h-8 rounded-md object-cover" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold truncate">{s.title}</p>
+                                <p className="text-[10px] text-slate-500 truncate">{s.creator}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SELECTOR DE PELÍCULA O LIBRO + BUSCADOR EN VIVO */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between ml-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Cultura (Busca en la API)</label>
+                        <div className="flex gap-1">
+                          {['Película', 'Libro'].map(type => (
+                            <button
+                              type="button"
+                              key={type}
+                              onClick={() => { setNewMediaType(type); setSelectedMedia(null); setMediaSuggestions([]); }}
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${newMediaType === type ? 'bg-[#C746B3] text-white' : 'bg-slate-100 text-slate-600'}`}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={`Escribe el título de ${newMediaType === 'Película' ? 'la película' : 'el libro'}...`}
+                        value={mediaSearchTerm}
+                        onChange={e => { setMediaSearchTerm(e.target.value); setSelectedMedia(null); }}
+                        required
+                        className="w-full p-2.5 text-xs rounded-xl border bg-slate-50 mt-1"
+                      />
+                      {mediaSuggestions.length > 0 && (
+                        <div className="mt-1 bg-white border rounded-xl shadow-md divide-y">
+                          {mediaSuggestions.map(m => (
+                            <div
+                              key={m.id}
+                              onClick={() => { setSelectedMedia(m); setMediaSearchTerm(m.title); setMediaSuggestions([]); }}
+                              className="p-2 flex items-center gap-2 hover:bg-slate-50 cursor-pointer"
+                            >
+                              <img src={m.cover} className="w-8 h-8 rounded-md object-cover" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold truncate">{m.title}</p>
+                                <p className="text-[10px] text-slate-500 truncate">{m.creator}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="submit" className="w-full bg-[#C746B3] text-white font-bold text-sm py-3 rounded-2xl">
+                      Publicar en popclub.
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* NAV BAR */}
+            <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center">
+              <div className="w-full max-w-md bg-white/90 backdrop-blur-lg border-t px-4 py-2 flex items-center justify-between shadow-lg">
+                <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'feed' ? 'text-[#C746B3]' : 'text-slate-400'}`}><Compass size={19} /><span className="text-[9px] font-bold">Feed</span></button>
+                <button onClick={() => setActiveTab('search')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'search' ? 'text-[#C746B3]' : 'text-slate-400'}`}><Search size={19} /><span className="text-[9px] font-bold">Buscar</span></button>
+                <button onClick={() => setActiveTab('memories')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'memories' ? 'text-[#C746B3]' : 'text-slate-400'}`}><Grid size={19} /><span className="text-[9px] font-bold">Memories</span></button>
+                <button onClick={() => setActiveTab('chat')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'chat' ? 'text-[#C746B3]' : 'text-slate-400'}`}><MessageSquare size={19} /><span className="text-[9px] font-bold">Chat</span></button>
+                <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-0.5 ${activeTab === 'profile' ? 'text-[#C746B3]' : 'text-slate-400'}`}><User size={19} /><span className="text-[9px] font-bold">Perfil</span></button>
+              </div>
+            </nav>
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
